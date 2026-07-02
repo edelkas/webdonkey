@@ -1,0 +1,10 @@
+{
+  "name": "ed2k-web-search",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Client-side web search engine for the ed2k network (see CLAUDE.md).",
+  "scripts": {
+    "test": "node test/protocol.test.mjs && node test/transport.test.mjs"
+  }
+}
