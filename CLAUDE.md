@@ -165,10 +165,17 @@ the DOM and the transport.
   `CONTROL [0x02][json]` for relay telemetry. **PACKED (0xD4) datagrams
   are inflated to 0xE3 on receive** (`inflateIfPacked`, via `DecompressionStream`)
   so consumers always get plaintext.
-- ✅ `test/protocol.test.mjs` (66) + `test/transport.test.mjs` (21) — 87 assertions
-  total, `npm test` (no framework). NOTE: in this WSL box `npm` is the Windows
-  binary and can't run from a `\\wsl.localhost` path; run the files directly with
-  the Linux `node` instead.
+- ✅ `src/search.js` — orchestration. `SearchEngine` owns the transport + shared
+  per-session flags cache + datagram router (status replies matched by random u32
+  challenge; result datagrams routed to searches awaiting that server). `Search`
+  (per tab) pings→plans (`planServerRequest`)→fans out→live-merges. Dedupe by
+  hash: **sources summed** across servers, per-file **name histogram** (`names`
+  Map + derived most-popular `name`), `servers` Set. Per-server lifecycle is a
+  `ServerState` enum; emits `progress`/`results`/`log`/`done`; supports `cancel()`.
+- ✅ `test/protocol.test.mjs` (66) + `test/transport.test.mjs` (25) +
+  `test/search.test.mjs` (26) — 117 assertions, `npm test` (no framework). NOTE:
+  in this WSL box `npm` is the Windows binary and can't run from a
+  `\\wsl.localhost` path; run the files directly with the Linux `node` instead.
 - ✅ **Protocol layer fully verified against eMule source** — no remaining VERIFY
   items:
   - `Opcodes.h`: opcodes, FT tags, tag types, file-type strings, `SEARCH_OP`.
@@ -186,8 +193,8 @@ the DOM and the transport.
   path (`inflateIfPacked`). REQ2 vs REQ1 bodies are identical (bare tree, only
   opcode differs) — correct per OnTimer.
 - ⏳ Next: the **relay server** (WSS↔UDP, global rate limiter, traffic monitor —
-  §2.3, must speak the `transport.js` frame protocol); `search.js` orchestration
-  (ping→flags→plan→fan-out→aggregate/dedupe→progress); UI.
+  §2.3, must speak the `transport.js` frame protocol); the **UI** (form, results
+  table, tabs, progress, log — §5); `servers.js` static list.
 - `package.json` sets `"type":"module"`; source uses native ES modules (loaded in
   the browser via `<script type="module">`, no build step).
 
