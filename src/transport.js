@@ -43,6 +43,7 @@ import { PROTO } from './protocol.js';
 export const FRAME = { DATAGRAM: 0x01, CONTROL: 0x02 };
 
 const utf8d = new TextDecoder('utf-8');
+const utf8e = new TextEncoder();
 
 /** Parse an IPv4 literal "a.b.c.d" into 4 bytes. Throws on anything else. */
 export function ipv4ToBytes(host) {
@@ -71,6 +72,15 @@ export function encodeDatagramFrame(server, payload) {
   out[5] = (server.port >>> 8) & 0xff; // big-endian port
   out[6] = server.port & 0xff;
   out.set(payload, 7);
+  return out;
+}
+
+/** Encode a CONTROL frame carrying a JSON object (relay -> browser telemetry). */
+export function encodeControlFrame(obj) {
+  const json = utf8e.encode(JSON.stringify(obj));
+  const out = new Uint8Array(1 + json.length);
+  out[0] = FRAME.CONTROL;
+  out.set(json, 1);
   return out;
 }
 

@@ -172,10 +172,20 @@ the DOM and the transport.
   hash: **sources summed** across servers, per-file **name histogram** (`names`
   Map + derived most-popular `name`), `servers` Set. Per-server lifecycle is a
   `ServerState` enum; emits `progress`/`results`/`log`/`done`; supports `cancel()`.
+- ✅ `relay/` — the relay server (Node, **separate deploy**, one dep: `ws`).
+  `relay.js` (HTTP+WS server, per-client UDP socket for unambiguous reply
+  routing, monitor + periodic stats + load shedding), `pacer.js` (global token
+  bucket + per-server pacing + queue/per-client shedding; pure `pump(now)` core),
+  `guard.js` (blocks private/reserved IPv4 by default; optional `ip:port`
+  allowlist). Speaks the `transport.js` frame protocol; emits `CONTROL` throttle
+  frames as backpressure. TLS terminated by the operator's reverse proxy
+  (browser→WSS→proxy→`ws://`→relay). Config via env; see `relay/README.md`.
 - ✅ `test/protocol.test.mjs` (66) + `test/transport.test.mjs` (25) +
-  `test/search.test.mjs` (26) — 117 assertions, `npm test` (no framework). NOTE:
-  in this WSL box `npm` is the Windows binary and can't run from a
-  `\\wsl.localhost` path; run the files directly with the Linux `node` instead.
+  `test/search.test.mjs` (26) + `relay/test.mjs` (36) — 153 assertions, no
+  framework. NOTE: in this WSL box `npm` is the Windows binary and can't run from
+  a `\\wsl.localhost` path; run the test files directly with the Linux `node`.
+  The relay also needs `npm install ws` in `relay/` before `node relay.js` runs
+  (tests don't need it — they exercise pure pacer/guard/frame logic).
 - ✅ **Protocol layer fully verified against eMule source** — no remaining VERIFY
   items:
   - `Opcodes.h`: opcodes, FT tags, tag types, file-type strings, `SEARCH_OP`.
@@ -192,9 +202,8 @@ the DOM and the transport.
 - ✅ PACKED (0xD4/zlib) result inflation — implemented in the transport receive
   path (`inflateIfPacked`). REQ2 vs REQ1 bodies are identical (bare tree, only
   opcode differs) — correct per OnTimer.
-- ⏳ Next: the **relay server** (WSS↔UDP, global rate limiter, traffic monitor —
-  §2.3, must speak the `transport.js` frame protocol); the **UI** (form, results
-  table, tabs, progress, log — §5); `servers.js` static list.
+- ⏳ Next: the **UI** (form, results table, tabs, progress, log — §5);
+  `servers.js` static list. After that: end-to-end wiring against a live relay.
 - `package.json` sets `"type":"module"`; source uses native ES modules (loaded in
   the browser via `<script type="module">`, no build step).
 
