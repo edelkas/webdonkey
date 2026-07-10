@@ -180,12 +180,30 @@ the DOM and the transport.
   allowlist). Speaks the `transport.js` frame protocol; emits `CONTROL` throttle
   frames as backpressure. TLS terminated by the operator's reverse proxy
   (browser→WSS→proxy→`ws://`→relay). Config via env; see `relay/README.md`.
+- ✅ **UI** — `index.html` + `styles.css` (hand-written, dark/light via
+  `prefers-color-scheme`, dense power-user layout, no framework):
+  - `src/servers.js` — `BUILTIN_SERVERS` (**empty on purpose**, §7) +
+    `parseServerLines`/`formatServerLines`/`normalizeServer`. IPv4-only (relay
+    frame packs 4 bytes); accepts `ip:tcp`, `ip:tcp:udp`, `Name|ip|tcp|udp`.
+    Users paste a list in Settings → persisted to localStorage.
+  - `src/cache.js` — query history + settings in localStorage (BigInt sizes
+    round-trip as decimal strings; `fieldsKey` stringifies so BigInt and its
+    persisted form key identically); `ResultsCache` = in-memory + TTL only (§5.4).
+    Degrades to memory when localStorage is unavailable.
+  - `src/ui.js` — `ResultsTable` (sortable headers incl. BigInt-safe size compare,
+    rAF-coalesced re-render, name-histogram badge + tooltip, server-list tooltip),
+    `LogPanel`, `Progress`, `ContextMenu`, `renderTabs`. All network text via
+    `textContent` (never innerHTML — filenames are untrusted).
+  - `src/app.js` — wiring: transport/engine bootstrap, form→`buildSearchTree`,
+    per-tab search lifecycle, results cache, row activate (`ed2k://`) + context
+    menu, history chips, Settings dialog, relay status + throttle surfacing,
+    extension help note (§2.2), Ctrl/Cmd+K to focus query.
 - ✅ `test/protocol.test.mjs` (66) + `test/transport.test.mjs` (25) +
-  `test/search.test.mjs` (26) + `relay/test.mjs` (36) — 153 assertions, no
-  framework. NOTE: in this WSL box `npm` is the Windows binary and can't run from
-  a `\\wsl.localhost` path; run the test files directly with the Linux `node`.
-  The relay also needs `npm install ws` in `relay/` before `node relay.js` runs
-  (tests don't need it — they exercise pure pacer/guard/frame logic).
+  `test/search.test.mjs` (26) + `test/app.test.mjs` (30) + `relay/test.mjs` (36)
+  — 183 assertions, no framework. NOTE: in this WSL box `npm` is the Windows
+  binary and can't run from a `\\wsl.localhost` path; run the test files directly
+  with the Linux `node`. The relay also needs `npm install ws` in `relay/` before
+  `node relay.js` runs (tests don't need it — pure pacer/guard/frame logic).
 - ✅ **Protocol layer fully verified against eMule source** — no remaining VERIFY
   items:
   - `Opcodes.h`: opcodes, FT tags, tag types, file-type strings, `SEARCH_OP`.
@@ -202,8 +220,10 @@ the DOM and the transport.
 - ✅ PACKED (0xD4/zlib) result inflation — implemented in the transport receive
   path (`inflateIfPacked`). REQ2 vs REQ1 bodies are identical (bare tree, only
   opcode differs) — correct per OnTimer.
-- ⏳ Next: the **UI** (form, results table, tabs, progress, log — §5);
-  `servers.js` static list. After that: end-to-end wiring against a live relay.
+- ⏳ Next: **populate the server list** (§7 — still TBD with user; nothing is
+  shipped, so the app needs servers pasted into Settings before it can search),
+  then **end-to-end testing against a live relay + real servers**. After that:
+  runtime server discovery, GetSources, the extension (§8).
 - `package.json` sets `"type":"module"`; source uses native ES modules (loaded in
   the browser via `<script type="module">`, no build step).
 

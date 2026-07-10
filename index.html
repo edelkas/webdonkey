@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ed2k search</title>
+<meta name="description" content="Client-side search across the ed2k network.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1>ed2k<span class="dim">/search</span></h1>
+  <div class="topbar-right">
+    <span id="server-count" class="meta">no servers configured</span>
+    <span id="relay-status" class="status">idle</span>
+    <button type="button" id="btn-settings" class="ghost">Settings</button>
+  </div>
+</header>
+
+<div id="ext-note" class="note" hidden>
+  <span>
+    Searches are relayed through a shared server with global rate limits. A local UDP
+    browser extension (planned) would send queries straight from your machine and skip
+    those limits entirely — the site works fully without it.
+  </span>
+  <button type="button" class="dismiss" title="Dismiss">×</button>
+</div>
+
+<form id="search-form" autocomplete="off">
+  <div class="row row-main">
+    <input id="query" type="text" placeholder="Search terms — supports AND, OR, NOT, &quot;quoted phrases&quot; and (grouping)" spellcheck="false">
+    <button type="submit" id="btn-search" class="primary">Search</button>
+    <button type="button" id="btn-cancel" disabled>Cancel</button>
+    <button type="button" id="btn-reset">Reset</button>
+  </div>
+
+  <div class="row row-filters">
+    <label>Type <select id="type"></select></label>
+    <label>Format <input id="format" type="text" size="6" placeholder="mp3" spellcheck="false"></label>
+    <label>Min size <input id="min-size" type="number" min="0" step="1" size="6"></label>
+    <label>Max size <input id="max-size" type="number" min="0" step="1" size="6"></label>
+    <label>Unit
+      <select id="size-unit">
+        <option>B</option><option>KiB</option><option selected>MiB</option><option>GiB</option>
+      </select>
+    </label>
+    <label>Min sources <input id="min-sources" type="number" min="0" step="1" size="5"></label>
+  </div>
+
+  <details class="advanced">
+    <summary>Advanced metadata</summary>
+    <div class="row row-filters">
+      <label>Min bitrate <input id="min-bitrate" type="number" min="0" step="1" size="5"></label>
+      <label>Max bitrate <input id="max-bitrate" type="number" min="0" step="1" size="5"></label>
+      <label>Min length (s) <input id="min-length" type="number" min="0" step="1" size="5"></label>
+      <label>Max length (s) <input id="max-length" type="number" min="0" step="1" size="5"></label>
+      <label>Codec <input id="codec" type="text" size="8" spellcheck="false"></label>
+    </div>
+  </details>
+
+  <div id="history" class="history" hidden></div>
+</form>
+
+<nav id="tabs" class="tabs" aria-label="Open searches"></nav>
+
+<section id="progress" class="progress" hidden>
+  <div class="bar"><div class="bar-fill"></div></div>
+  <div class="progress-text"></div>
+</section>
+
+<section class="results">
+  <p class="empty">No results yet. Enter a query and hit Search.</p>
+  <table id="results-table" hidden>
+    <thead><tr></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="hint">Left-click a row to open its <code>ed2k://</code> link · right-click for more actions</p>
+</section>
+
+<section class="log-section">
+  <h2>Log</h2>
+  <div id="log" class="log"></div>
+</section>
+
+<div id="context-menu" class="context-menu" hidden></div>
+<div id="toast" class="toast" hidden></div>
+
+<dialog id="settings-dialog" class="settings">
+  <form method="dialog">
+    <h2>Settings</h2>
+
+    <label class="field">
+      <span>Relay URL</span>
+      <input id="relay-url" type="url" placeholder="wss://your.host/ed2k-relay/" spellcheck="false">
+      <small>Browsers cannot send UDP. Queries are forwarded by a UDP-over-WebSocket relay you run.</small>
+    </label>
+
+    <label class="field">
+      <span>Servers</span>
+      <textarea id="server-list" rows="8" spellcheck="false"
+        placeholder="One per line. IPv4 only (the relay packs the address as 4 bytes).&#10;&#10;1.2.3.4:4661            (UDP port defaults to TCP+4)&#10;1.2.3.4:4661:4665       (explicit UDP port)&#10;Name|1.2.3.4|4661|4665&#10;# comments allowed"></textarea>
+      <small>Stored in your browser only. Nothing is indexed server-side.</small>
+    </label>
+
+    <menu>
+      <button type="button" id="btn-settings-save" class="primary">Save &amp; reconnect</button>
+      <button type="submit" value="cancel">Close</button>
+    </menu>
+  </form>
+</dialog>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

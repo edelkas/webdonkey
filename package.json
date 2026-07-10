@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Client-side web search engine for the ed2k network (see CLAUDE.md).",
   "scripts": {
-    "test": "node test/protocol.test.mjs && node test/transport.test.mjs && node test/search.test.mjs"
+    "test": "node test/protocol.test.mjs && node test/transport.test.mjs && node test/search.test.mjs && node test/app.test.mjs && node relay/test.mjs",
+    "serve": "python3 -m http.server 8080"
   }
 }
